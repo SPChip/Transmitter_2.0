@@ -3,7 +3,7 @@
 //--------------------- НАСТРОЙКИ ----------------------
 
 #define INIT_ADDR 1023        // номер резервной ячейки для инициализации первого запуска
-#define INIT_KEY 55           // ключ первого запуска. 0-254, на выбор, надо поменять на любое значение и будет как впервый раз
+#define INIT_KEY 55           // ключ первого запуска. 0-99, на выбор, надо поменять на любое значение и будет как впервый раз
 #define KEY1_PIN 11            // кнопка KEY1 подключена сюда 
 #define KEY2_PIN 5
 #define KEY3_PIN 13
@@ -20,7 +20,7 @@
 #define RP1_pin A11
 #define RP2_pin A7
 #define CH_NUM 0x7a           // номер канала (должен совпадать с приёмником)
-#define SIG_POWER RF24_PA_HIGH // УРОВЕНЬ МОЩНОСТИ ПЕРЕДАТЧИКА На выбор RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
+#define SIG_POWER RF24_PA_LOW // УРОВЕНЬ МОЩНОСТИ ПЕРЕДАТЧИКА На выбор RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 #define SIG_SPEED RF24_1MBPS  // СКОРОСТЬ ОБМЕНА На выбор RF24_2MBPS, RF24_1MBPS, RF24_250KBPS должна быть одинакова на приёмнике и передатчике! при самой низкой скорости имеем самую высокую чувствительность и дальность!! ВНИМАНИЕ!!! enableAckPayload НЕ РАБОТАЕТ НА СКОРОСТИ 250 kbps!
 #define BLACK 0x0000
 #define WHITE 0xFFFF
@@ -87,36 +87,36 @@ GTimer LCD_TIMER(MS, 100);                        // создаем таймер
 //--------------------- ОБЪЕКТЫ ----------------------
 
 //--------------------- КОНСТАНТЫ ----------------------
-uint16_t set_default[20][5] = {          // настройка каналов по умолчанию
-  {1, 0, 1023, 0, 255},     //CH1 - J1X
-  {1, 0, 1023, 0, 255},     //CH2 - J1Y
-  {1, 0, 1023, 0, 255},     //CH3 - J2X
-  {1, 0, 1023, 0, 255},     //CH4 - J2Y
-  {1, 0, 1023, 0, 255},     //CH5 - RP1
-  {1, 0, 1023, 0, 255},     //CH5 - RP2
-  {1, 0, 1023, 0, 255},       //CH6 - LEFT
-  {1, 0, 1023, 0, 255},       //CH7 - UP
-  {1, 0, 1023, 0, 255},       //CH8 - DOWN
-  {1, 0, 1023, 0, 255},       //CH9 - RIGHT
-  {1, 0, 1023, 0, 255},      //CH10 - YELLOW
-  {1, 0, 1023, 0, 255},      //CH11 - WHITE
-  {1, 0, 1023, 0, 255},      //CH12 - BLUE
-  {1, 0, 1023, 0, 255},      //CH13 - RED
-  {1, 0, 1023, 0, 255},      //CH14 - J1KEY
-  {1, 0, 1023, 0, 255},      //CH15 - J2KEY
-  {1, 0, 1023, 0, 255},      //CH16 - SW1
-  {1, 0, 1023, 0, 255},      //CH17 - SW2
-  {1, 0, 1023, 0, 255},      //CH18 - SW3
-  {1, 0, 1023, 0, 255},      //CH19 - SW4
+uint8_t set_default[20][3] = {          // настройка каналов по умолчанию
+  {0, 0, 255},     //CH1 - J1X
+  {1, 0, 255},     //CH2 - J1Y
+  {2, 0, 255},     //CH3 - J2X
+  {3, 0, 255},     //CH4 - J2Y
+  {4, 0, 255},     //CH5 - RP1
+  {5, 0, 255},     //CH5 - RP2
+  {6, 0, 255},     //CH6 - LEFT
+  {7, 0, 255},     //CH7 - UP
+  {8, 0, 255},     //CH8 - DOWN
+  {9, 0, 255},     //CH9 - RIGHT
+  {10, 0, 255},     //CH10 - YELLOW
+  {11, 0, 255},     //CH11 - WHITE
+  {18, 0, 255},     //CH12 - BLUE
+  {19, 0, 255},     //CH13 - RED
+  {14, 0, 255},      //CH14 - J1KEY
+  {15, 0, 255},      //CH15 - J2KEY
+  {16, 0, 255},      //CH16 - SW1
+  {17, 0, 255},      //CH17 - SW2
+  {18, 0, 255},      //CH18 - SW3
+  {19, 0, 255},      //CH19 - SW4
 };
 //--------------------- КОНСТАНТЫ ----------------------
 
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 uint16_t read_data [20];          // массив опроса кнопок и крутилок
-uint16_t current_settings[20][3];   // массив с текущими настройками
-uint16_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
-uint8_t transmit_data[7];        // массив пересылаемых данных
-uint8_t telemetry[2];            // массив принятых от приёмника данных телеметрии
+uint8_t current_settings[20][3];   // массив с текущими настройками
+uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
+uint16_t transmit_data[20];        // массив пересылаемых данных
+uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
@@ -133,17 +133,11 @@ void setup() {
   LCD.fillScreen(ST77XX_BLACK);
   Wire.begin();
   RadioSetup();
-  //if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
-  //  EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
-  //  EEPROM.put(100, set_default);           // режим экрана 1
-  //}
-  //EEPROM.get(100, current_settings);        // читаем настройки из eeprom
-  for (uint8_t i = 0; i < 20; i++) {
-    for (uint8_t j = 0; j < 5; j++) {
-      current_settings [i][j] = set_default[i][j];
-    }
+  if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
+    EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
+    EEPROM.put(100, set_default);           // настройка каналов до заводских
   }
-
+  EEPROM.get(100, current_settings);        // читаем настройки каналов из eeprom
 }
 
 void loop() {
@@ -151,41 +145,27 @@ void loop() {
   KEY2.tick();
   KEY3.tick();
   ReadData();                                    // опрашиваем все кнопки и крутилки
+  PackForTX();
+  Radio_TX_RX();
   if (KEY1.isClick()) digitalWrite(PinPower_PIN, LOW);    // проверка на один клик
-
   if (LCD_TIMER.isReady()) {
-    //  Display_TestKey();
+    Display_TestKey();
   }
+}
 
+
+void PackForTX() {          // функция упаковки массива для отправки в соответствии с текущими настройками
   for (uint8_t i = 0; i < 20; i++) {
-    //Serial.print(current_settings[i][0]);
-    //Serial.print(" ");
-    //Serial.print(current_settings[i][2]);
-    //Serial.print(" ");
-    Serial.print(read_data [current_settings[i][0]]);
-    Serial.print(" ");
-    Serial.print(current_settings[i][1]);
-    Serial.print(" ");
-    Serial.print(current_settings[i][2]);
-    Serial.print(" ");
-    Serial.print(current_settings[i][3]);
-    Serial.print(" ");
-    Serial.print(current_settings[i][4]);
-    Serial.print(" ");
-    //if  ( current_settings[i][0]   < 6 )    
-    transmit_data[i] = map(read_data [current_settings[i][0]], current_settings[i][1], current_settings[i][2], current_settings[i][3], current_settings[i][4]);
-    // else if (current_settings[i][0] >= 6 && current_settings[i][0] < 18 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1, current_settings[i][1], current_settings[i][2]);
-    // else transmit_data[i] = map(read_data [current_settings[i][0]], 0, 2, current_settings[i][1], current_settings[i][2]);
+    if  ( current_settings[i][0]   < 6 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1023, current_settings[i][1], current_settings[i][2]);
+    else if (current_settings[i][0] >= 6 && current_settings[i][0] < 18 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1, current_settings[i][1], current_settings[i][2]);
+    else transmit_data[i] = map(read_data [current_settings[i][0]], 0, 2, current_settings[i][1], current_settings[i][2]);
     Serial.print(transmit_data [i]);
     Serial.print(" | ");
   }
-  Serial.println("  ");
-
-
-
+  Serial.println();
 }
 
-void ReadData() {
+void ReadData() {           // функция опроса всех кнопок, крутилок и джойстиков
   read_data [0] = analogRead(J1X_pin); // J1X
   read_data [1] = analogRead(J1Y_pin); // J1Y
   read_data [2] = analogRead(J2X_pin); // J2X
