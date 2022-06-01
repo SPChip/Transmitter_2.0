@@ -49,7 +49,7 @@ void Display_TestKey () {
   LCD.setCursor(x0 + 39, y0 + 30);
   (KEY2.state()) ? LCD.setTextColor(BLACK, GREEN) : LCD.setTextColor(WHITE, BLACK);
   LCD.print("KEY2");
-//  -------------KEY3----------------------
+//-------------KEY3----------------------
   LCD.setCursor(x0 + 79, y0 + 30);
   (KEY3.state()) ? LCD.setTextColor(BLACK, GREEN) : LCD.setTextColor(WHITE, BLACK);
   LCD.print("KEY3");
@@ -101,22 +101,17 @@ void Display_TestKey () {
   LCD.setCursor(x0 + 84, y0 + 70);
   (read_data [17]) ? LCD.setTextColor(BLACK, GREEN) : LCD.setTextColor(WHITE, BLACK);
   LCD.print("SW2");
-//  //-------------SW3----------------------
-//  LCD.setCursor(x0 + 0, y0 + 80);
-//  LCD.setTextColor(WHITE, BLACK);
-//  LCD.print("SW3");
-//  LCD.setCursor(x0 + 25, y0 + 80);
-//  if (!bitRead(SW3_1_BYTE, SW3_1_BIT))  LCD.print("0");
-//  if (bitRead(SW3_1_BYTE, SW3_1_BIT) && bitRead(SW3_2_BYTE, SW3_2_BIT)) LCD.print("1");
-//  if (!bitRead(SW3_2_BYTE, SW3_2_BIT)) LCD.print("2");
-////   -------------SW4----------------------
-//  LCD.setCursor(x0 + 72, y0 + 80);
-//  LCD.setTextColor(WHITE, BLACK);
-//  LCD.print("SW4");
-//  LCD.setCursor(x0 + 96, y0 + 80);
-//  if (!bitRead(SW4_1_BYTE, SW4_1_BIT))  LCD.print("0");
-//  if (bitRead(SW4_1_BYTE, SW4_1_BIT) && bitRead(SW4_2_BYTE, SW4_2_BIT)) LCD.print("1");
-//  if (!bitRead(SW4_2_BYTE, SW4_2_BIT)) LCD.print("2");
-//
-//  LCD.setTextColor(WHITE, BLACK);
+//-------------SW3----------------------
+  LCD.setCursor(x0 + 0, y0 + 80);
+  LCD.setTextColor(WHITE, BLACK);
+  LCD.print("SW3");
+  LCD.setCursor(x0 + 25, y0 + 80);
+  LCD.print(read_data [18]); 
+//-------------SW4----------------------
+  LCD.setCursor(x0 + 72, y0 + 80);
+  LCD.setTextColor(WHITE, BLACK);
+  LCD.print("SW4");
+  LCD.setCursor(x0 + 96, y0 + 80);
+  LCD.print(read_data [19]); 
+  LCD.setTextColor(WHITE, BLACK);
 }

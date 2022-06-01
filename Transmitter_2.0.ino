@@ -87,36 +87,36 @@ GTimer LCD_TIMER(MS, 100);                        // создаем таймер
 //--------------------- ОБЪЕКТЫ ----------------------
 
 //--------------------- КОНСТАНТЫ ----------------------
-uint8_t set_default[20][3] = {          // настройка каналов по умолчанию
-  {0, 0, 255},     //CH1 - J1X
-  {1, 0, 255},     //CH2 - J1Y
-  {2, 0, 255},     //CH3 - J2X
-  {3, 0, 255},     //CH4 - J2Y
-  {4, 0, 255},     //CH5 - RP1
-  {5, 0, 255},     //CH5 - RP2
-  {6, 0, 1},       //CH6 - LEFT
-  {7, 0, 1},       //CH7 - UP
-  {8, 0, 1},       //CH8 - DOWN
-  {9, 0, 1},       //CH9 - RIGHT
-  {10, 0, 1},      //CH10 - YELLOW
-  {11, 0, 1},      //CH11 - WHITE
-  {12, 0, 1},      //CH12 - BLUE
-  {13, 0, 1},      //CH13 - RED
-  {14, 0, 1},      //CH14 - J1KEY
-  {15, 0, 1},      //CH15 - J2KEY
-  {16, 0, 1},      //CH16 - SW1
-  {17, 0, 1},      //CH17 - SW2
-  {18, 0, 2},      //CH18 - SW3
-  {19, 0, 2},      //CH19 - SW4
+uint16_t set_default[20][5] = {          // настройка каналов по умолчанию
+  {1, 0, 1023, 0, 255},     //CH1 - J1X
+  {1, 0, 1023, 0, 255},     //CH2 - J1Y
+  {1, 0, 1023, 0, 255},     //CH3 - J2X
+  {1, 0, 1023, 0, 255},     //CH4 - J2Y
+  {1, 0, 1023, 0, 255},     //CH5 - RP1
+  {1, 0, 1023, 0, 255},     //CH5 - RP2
+  {1, 0, 1023, 0, 255},       //CH6 - LEFT
+  {1, 0, 1023, 0, 255},       //CH7 - UP
+  {1, 0, 1023, 0, 255},       //CH8 - DOWN
+  {1, 0, 1023, 0, 255},       //CH9 - RIGHT
+  {1, 0, 1023, 0, 255},      //CH10 - YELLOW
+  {1, 0, 1023, 0, 255},      //CH11 - WHITE
+  {1, 0, 1023, 0, 255},      //CH12 - BLUE
+  {1, 0, 1023, 0, 255},      //CH13 - RED
+  {1, 0, 1023, 0, 255},      //CH14 - J1KEY
+  {1, 0, 1023, 0, 255},      //CH15 - J2KEY
+  {1, 0, 1023, 0, 255},      //CH16 - SW1
+  {1, 0, 1023, 0, 255},      //CH17 - SW2
+  {1, 0, 1023, 0, 255},      //CH18 - SW3
+  {1, 0, 1023, 0, 255},      //CH19 - SW4
 };
 //--------------------- КОНСТАНТЫ ----------------------
 
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 uint16_t read_data [20];          // массив опроса кнопок и крутилок
-uint8_t current_settings[20][3];   // массив с текущими настройками
-uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
-uint16_t transmit_data[7];        // массив пересылаемых данных
-uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
+uint16_t current_settings[20][3];   // массив с текущими настройками
+uint16_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
+uint8_t transmit_data[7];        // массив пересылаемых данных
+uint8_t telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
@@ -133,16 +133,15 @@ void setup() {
   LCD.fillScreen(ST77XX_BLACK);
   Wire.begin();
   RadioSetup();
-  if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
-    EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
-    EEPROM.put(100, set_default);           // режим экрана 1
-  }
-  EEPROM.get(100, current_settings);        // читаем настройки из eeprom
+  //if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
+  //  EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
+  //  EEPROM.put(100, set_default);           // режим экрана 1
+  //}
+  //EEPROM.get(100, current_settings);        // читаем настройки из eeprom
   for (uint8_t i = 0; i < 20; i++) {
-    for (uint8_t j = 0; j < 3; j++) {
+    for (uint8_t j = 0; j < 5; j++) {
       current_settings [i][j] = set_default[i][j];
     }
-
   }
 
 }
@@ -154,24 +153,34 @@ void loop() {
   ReadData();                                    // опрашиваем все кнопки и крутилки
   if (KEY1.isClick()) digitalWrite(PinPower_PIN, LOW);    // проверка на один клик
 
-
-
   if (LCD_TIMER.isReady()) {
-    Display_TestKey();
+    //  Display_TestKey();
   }
 
   for (uint8_t i = 0; i < 20; i++) {
-    transmit_data[i] = map(read_data [current_settings[i][0]], 0, (current_settings[i][0] < 6 ) ? 255 : (current_settings[i][0] < 18 ) ? 1 : 2, current_settings[i][1], current_settings[i][2]);
+    //Serial.print(current_settings[i][0]);
+    //Serial.print(" ");
+    //Serial.print(current_settings[i][2]);
+    //Serial.print(" ");
+    Serial.print(read_data [current_settings[i][0]]);
+    Serial.print(" ");
+    Serial.print(current_settings[i][1]);
+    Serial.print(" ");
+    Serial.print(current_settings[i][2]);
+    Serial.print(" ");
+    Serial.print(current_settings[i][3]);
+    Serial.print(" ");
+    Serial.print(current_settings[i][4]);
+    Serial.print(" ");
+    //if  ( current_settings[i][0]   < 6 )    
+    transmit_data[i] = map(read_data [current_settings[i][0]], current_settings[i][1], current_settings[i][2], current_settings[i][3], current_settings[i][4]);
+    // else if (current_settings[i][0] >= 6 && current_settings[i][0] < 18 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1, current_settings[i][1], current_settings[i][2]);
+    // else transmit_data[i] = map(read_data [current_settings[i][0]], 0, 2, current_settings[i][1], current_settings[i][2]);
     Serial.print(transmit_data [i]);
-    Serial.print("  ");
+    Serial.print(" | ");
   }
   Serial.println("  ");
 
-
-
-  transmit_data[0] = 0x55;
-  transmit_data[1] = map(analogRead(J1Y_pin), 0, 1023, 0, 255);         // считываем показания потенциометра с вывода A1 и записываем их в 2 элемент массива data
-  transmit_data[4] = analogRead(J2Y_pin);
 
 
 }
