@@ -15,23 +15,75 @@ void Display() {
   }
 }
 void Display1 () {
-  LCD.setTextColor(WHITE);
+  if (!first_frame) {
+    first_frame = 1;
+    LCD.fillScreen(BLACK);
+    LCD.setTextColor(WHITE);
     LCD.setTextSize(2);
     LCD.setCursor(40, 2);
     LCD.print("DISP 1");
     LCD.setTextSize(1);
+
+  }
+  LCD.fillRect(20, 40, 25, 8, BLACK);
+  LCD.setCursor(20, 40);
+  LCD.print(digitalRead(A4));
+  LCD.fillRect(20, 60, 25, 8, BLACK);
+  LCD.setCursor(20, 60);
+  LCD.print(digitalRead(A5));
+  LCD.setCursor(20, 80);
+  LCD.fillRect(20, 80, 25, 8, BLACK);
+  LCD.print(telemetry[0] * 0.00488);
 }
 void Display2 () {
-  LCD.setTextColor(WHITE);
-    LCD.setTextSize(2);
-    LCD.setCursor(40, 2);
-    LCD.print("DISP 2");
-    LCD.setTextSize(1);
+  if (!first_frame) {
+    first_frame = 1;
+    LCD.fillScreen(BLACK);
+  }
+  DrawBat (buf[0], 109, 0);
+  DrawBat (buf[2], 2, 0);
 }
+
+void DrawBat (uint8_t charge, uint8_t x0, uint8_t y0) {
+  if (charge < 64) {
+    LCD.drawRect(x0, y0, 19, 7, GREEN);
+    LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
+    LCD.fillRect(x0 + 2, y0 + 2, 3, 3, GREEN);
+    LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
+    LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
+    LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
+  } else if (charge >= 64 && charge < 128 ) {
+    LCD.drawRect(x0, y0, 19, 7, GREEN);
+    LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
+    LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
+    LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
+    LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
+  } else if (charge >= 128 && charge < 192 ) {
+    LCD.drawRect(x0, y0, 19, 7, YELLOW);
+    LCD.drawRect(x0 - 2, y0 + 2, 2, 3, YELLOW);
+    LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 6, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 10, y0 + 2, 3, 3, YELLOW);
+    LCD.fillRect(x0 + 14, y0 + 2, 3, 3, YELLOW);
+  } else if (charge >= 192) {
+    LCD.drawRect(x0, y0, 19, 7, RED);
+    LCD.drawRect(x0 - 2, y0 + 2, 2, 3, RED);
+    LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 6, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 10, y0 + 2, 3, 3, BLACK);
+    LCD.fillRect(x0 + 14, y0 + 2, 3, 3, RED);
+  }
+}
+
+
+
 
 void Display_TestKey () {
   uint8_t x0 = 12, y0 = 23;
   if (!first_frame) {
+    first_frame = 1;
+    LCD.fillScreen(BLACK);
     LCD.setTextColor(WHITE);
     LCD.setTextSize(2);
     LCD.setCursor(40, 2);
@@ -63,8 +115,6 @@ void Display_TestKey () {
     LCD.setCursor(x0 + 72, y0 + 80);
     LCD.setTextColor(WHITE, BLACK);
     LCD.print("SW4");
-
-    first_frame = 1;
   }
   //-------------J1X-----------------------
   LCD.fillRect(x0 + 25, y0 + 0, 25, 8, BLACK);
