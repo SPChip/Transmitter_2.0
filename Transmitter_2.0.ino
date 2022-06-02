@@ -66,7 +66,7 @@
 //--------------------- НАСТРОЙКИ ----------------------
 
 //--------------------- БИБЛИОТЕКИ ----------------------
-//#include <SPI.h>
+#include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
 #include "nRF24L01.h"
@@ -100,8 +100,8 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
   {9, 0, 255},     //CH9 - RIGHT
   {10, 0, 255},     //CH10 - YELLOW
   {11, 0, 255},     //CH11 - WHITE
-  {18, 0, 255},     //CH12 - BLUE
-  {19, 0, 255},     //CH13 - RED
+  {12, 0, 255},     //CH12 - BLUE
+  {13, 0, 255},     //CH13 - RED
   {14, 0, 255},      //CH14 - J1KEY
   {15, 0, 255},      //CH15 - J2KEY
   {16, 0, 255},      //CH16 - SW1
@@ -115,7 +115,8 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
 uint16_t read_data [20];          // массив опроса кнопок и крутилок
 uint8_t current_settings[20][3];   // массив с текущими настройками
 uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
-uint16_t transmit_data[20];        // массив пересылаемых данных
+uint16_t transmit_data[10];        // массив пересылаемых данных
+uint16_t buf[20];
 uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
@@ -147,6 +148,8 @@ void loop() {
   ReadData();                                    // опрашиваем все кнопки и крутилки
   PackForTX();
   Radio_TX_RX();
+  //Serial.print(telemetry[0]);
+  //Serial.println(" | ");
   if (KEY1.isClick()) digitalWrite(PinPower_PIN, LOW);    // проверка на один клик
   if (LCD_TIMER.isReady()) {
     Display_TestKey();
@@ -156,13 +159,15 @@ void loop() {
 
 void PackForTX() {          // функция упаковки массива для отправки в соответствии с текущими настройками
   for (uint8_t i = 0; i < 20; i++) {
-    if  ( current_settings[i][0]   < 6 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1023, current_settings[i][1], current_settings[i][2]);
-    else if (current_settings[i][0] >= 6 && current_settings[i][0] < 18 ) transmit_data[i] = map(read_data [current_settings[i][0]], 0, 1, current_settings[i][1], current_settings[i][2]);
-    else transmit_data[i] = map(read_data [current_settings[i][0]], 0, 2, current_settings[i][1], current_settings[i][2]);
-    Serial.print(transmit_data [i]);
-    Serial.print(" | ");
+    if  ( current_settings[i][0]   < 6 ) buf[i] = map(read_data [current_settings[i][0]], 0, 1023, current_settings[i][1], current_settings[i][2]);
+    else if (current_settings[i][0] >= 6 && current_settings[i][0] < 18 ) buf[i] = map(read_data [current_settings[i][0]], 0, 1, current_settings[i][1], current_settings[i][2]);
+    else buf[i] = map(read_data [current_settings[i][0]], 0, 2, current_settings[i][1], current_settings[i][2]);
   }
-  Serial.println();
+  for (uint8_t i = 0; i < 10; i++) {          //упаковываем 20 byte в 10 int
+    transmit_data[i] = (buf[i * 2] << 8) + buf[i * 2 + 1];
+    //Serial.print(transmit_data [i], HEX);
+    //Serial.print(" | ");
+  }
 }
 
 void ReadData() {           // функция опроса всех кнопок, крутилок и джойстиков
