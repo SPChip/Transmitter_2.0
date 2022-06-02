@@ -15,7 +15,7 @@ void RadioSetup() {
   RADIO.stopListening();   // не слушаем радиоэфир, мы передатчик
 }
 void Radio_TX_RX() {                // отправка пакета transmit_data и получеение телеметрии
-  Serial.print("tx-ok  ");
+  
   if (RADIO.write(&transmit_data, sizeof(transmit_data))) {
     trnsmtd_pack++;
     Serial.print("tx2-ok  ");

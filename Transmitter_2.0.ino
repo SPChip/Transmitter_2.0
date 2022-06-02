@@ -120,6 +120,8 @@ uint16_t buf[20];
 uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
+bool first_frame = 0;
+uint8_t dysplayMode = 1;
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
 
@@ -151,9 +153,18 @@ void loop() {
   //Serial.print(telemetry[0]);
   //Serial.println(" | ");
   if (KEY1.isClick()) digitalWrite(PinPower_PIN, LOW);    // проверка на один клик
-  if (LCD_TIMER.isReady()) {
-    Display_TestKey();
+
+  if (KEY2.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
+    dysplayMode--;                               // переходим к следующему режиму экрана
+    if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
   }
+  if (KEY3.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
+    dysplayMode++;                               // переходим к следующему режиму экрана
+    if (dysplayMode > 3) dysplayMode = 3;        // максимум 3 экранов
+  }
+
+  Display();
+
 }
 
 
