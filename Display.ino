@@ -27,13 +27,13 @@ void Display1 () {
   }
   LCD.fillRect(20, 40, 25, 8, BLACK);
   LCD.setCursor(20, 40);
-  LCD.print(digitalRead(A4));
+  LCD.print(digitalRead(STDBY_PIN));
   LCD.fillRect(20, 60, 25, 8, BLACK);
   LCD.setCursor(20, 60);
-  LCD.print(digitalRead(A5));
+  LCD.print(digitalRead(CHRG_PIN));
   LCD.setCursor(20, 80);
   LCD.fillRect(20, 80, 25, 8, BLACK);
-  LCD.print(telemetry[0] * 0.00488);
+  LCD.print(analogRead(Bat_PIN) * 0.00488);
   LCD.setCursor(20, 100);
   LCD.fillRect(20, 100, 25, 8, BLACK);
   LCD.print(rx_connect[0]);

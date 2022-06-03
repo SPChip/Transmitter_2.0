@@ -6,7 +6,10 @@
 #define KEY1_PIN 11           // кнопка KEY1 подключена сюда 
 #define KEY2_PIN 5
 #define KEY3_PIN 13
-#define PinPower_PIN 8           
+#define PinPower_PIN 8  
+#define Bat_PIN A5
+#define STDBY_PIN 7
+#define CHRG_PIN A4
 #define CS_PIN 4
 #define DC_PIN 1
 #define RES_PIN 0
@@ -108,7 +111,6 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
   {18, 0, 255},      //CH18 - SW3
   {19, 0, 255},      //CH19 - SW4
 };
-//String POWER[] = {RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX};
 //--------------------- КОНСТАНТЫ ----------------------
 
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
@@ -133,8 +135,9 @@ void setup() {
   pinMode(PinPower_PIN, OUTPUT);       // пин управления питанием
   pinMode(RP1_pin, INPUT);
   pinMode(RP2_pin, INPUT);
-  pinMode(A5, INPUT_PULLUP);
-  pinMode(A4, INPUT_PULLUP);
+  pinMode(Bat_PIN, INPUT);
+  pinMode(STDBY_PIN, INPUT_PULLUP);
+  pinMode(CHRG_PIN, INPUT_PULLUP);
   digitalWrite(PinPower_PIN, HIGH);    // держим питание включенным
   LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab
   LCD.fillScreen(ST77XX_BLACK);
