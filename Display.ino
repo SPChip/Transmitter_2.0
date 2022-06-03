@@ -34,6 +34,10 @@ void Display1 () {
   LCD.setCursor(20, 80);
   LCD.fillRect(20, 80, 25, 8, BLACK);
   LCD.print(telemetry[0] * 0.00488);
+  LCD.setCursor(20, 100);
+  LCD.fillRect(20, 100, 25, 8, BLACK);
+  LCD.print(rx_connect[0]);
+
 }
 void Display2 () {
   if (!first_frame) {
