@@ -6,7 +6,7 @@
 #define KEY1_PIN 11           // кнопка KEY1 подключена сюда 
 #define KEY2_PIN 5
 #define KEY3_PIN 13
-#define PinPower_PIN 8  
+#define PinPower_PIN 8
 #define Bat_PIN A5
 #define STDBY_PIN 7
 #define CHRG_PIN A4
@@ -139,7 +139,8 @@ void setup() {
   pinMode(STDBY_PIN, INPUT_PULLUP);
   pinMode(CHRG_PIN, INPUT_PULLUP);
   digitalWrite(PinPower_PIN, HIGH);    // держим питание включенным
-  LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab
+
+  LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab  
   Display_Logo ();
   delay(1000);
   LCD.fillScreen(BLACK);
@@ -169,16 +170,16 @@ void loop() {
 
   if (KEY2.isClick() || KEY2.isStep()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode--;                               // переходим к следующему режиму экрана
-    if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов    
-    first_frame =0;
+    if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
+    first_frame = 0;
   }
   if (KEY3.isClick() || KEY3.isStep()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode++;                               // переходим к следующему режиму экрана
-    if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов    
-      first_frame =0;
+    if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов
+    first_frame = 0;
   }
 
-  
+
 }
 
 
