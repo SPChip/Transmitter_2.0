@@ -118,14 +118,14 @@ uint16_t read_data [20];          // массив опроса кнопок и �
 uint8_t current_settings[20][3];   // массив с текущими настройками
 uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
 uint16_t transmit_data[10];        // массив пересылаемых данных
-uint8_t buf[20];
+uint8_t buf[20], _buf[20];
 uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
 bool rx_connect[6];
 //uint16_t rx2_telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 bool first_frame = 0;
-uint8_t dysplayMode = 3;
+uint8_t dysplayMode = 1;
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
 
@@ -140,7 +140,10 @@ void setup() {
   pinMode(CHRG_PIN, INPUT_PULLUP);
   digitalWrite(PinPower_PIN, HIGH);    // держим питание включенным
   LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab
-  LCD.fillScreen(ST77XX_BLACK);
+  Display_Logo ();
+  delay(1000);
+  LCD.fillScreen(BLACK);
+  delay(100);
   Wire.begin();
   RadioSetup();
   if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
@@ -171,7 +174,7 @@ void loop() {
   }
   if (KEY3.isClick() || KEY3.isStep()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode++;                               // переходим к следующему режиму экрана
-    if (dysplayMode > 3) dysplayMode = 3;        // максимум 3 экранов    
+    if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов    
       first_frame =0;
   }
 

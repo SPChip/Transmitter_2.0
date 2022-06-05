@@ -3,18 +3,90 @@ void Display() {
   if (LCD_TIMER.isReady()) {
     switch (dysplayMode) {
       case 1:
-        Display_TestKey ();
+        Display1 ();
         break;
       case 2:
-        Display1();
+        Display2();
         break;
       case 3:
-        Display2();
+        Display3();
+        break;
+      case 4:
+        Display_TestKey ();
         break;
     }
   }
 }
+
 void Display1 () {
+  uint8_t x0 = 2, y0 = 10;
+  if (!first_frame) {
+
+    LCD.fillScreen(BLACK);
+    LCD.drawFastVLine(62, y0 + 20, 97, WHITE);
+    LCD.drawFastVLine(0, y0 + 20, 97, WHITE);
+    LCD.drawFastVLine(26, y0 + 20, 97, WHITE);
+    LCD.drawFastVLine(56, y0 + 20, 97, WHITE);
+    LCD.drawFastHLine(0, y0 + 18, 56, WHITE);
+    LCD.drawFastHLine(0, y0 + 28, 56, WHITE);
+    LCD.drawFastHLine(0, y0 + 38, 56, WHITE);
+    LCD.drawFastHLine(0, y0 + 48, 56, WHITE);
+    LCD.setTextColor(CYAN);
+    LCD.setTextSize(1);
+    LCD.setCursor(x0, y0 + 20);
+    LCD.print("CH01");
+    LCD.setCursor(x0, y0 + 30);
+    LCD.print("CH02");
+    LCD.setCursor(x0, y0 + 40);
+    LCD.print("CH03");
+    LCD.setCursor(x0, y0 + 50);
+    LCD.print("CH04");
+    LCD.setCursor(x0, y0 + 60);
+    LCD.print("CH05");
+    LCD.setCursor(x0, y0 + 70);
+    LCD.print("CH06");
+    LCD.setCursor(x0, y0 + 80);
+    LCD.print("CH07");
+    LCD.setCursor(x0, y0 + 90);
+    LCD.print("CH08");
+    LCD.setCursor(x0, y0 + 100);
+    LCD.print("CH09");
+    LCD.setCursor(x0, y0 + 110);
+    LCD.print("CH10");
+    LCD.setCursor(x0 + 64, y0 + 20);
+    LCD.print("CH11");
+    LCD.setCursor(x0 + 64, y0 + 30);
+    LCD.print("CH12");
+    LCD.setCursor(x0 + 64, y0 + 40);
+    LCD.print("CH13");
+    LCD.setCursor(x0 + 64, y0 + 50);
+    LCD.print("CH14");
+    LCD.setCursor(x0 + 64, y0 + 60);
+    LCD.print("CH15");
+    LCD.setCursor(x0 + 64, y0 + 70);
+    LCD.print("CH16");
+    LCD.setCursor(x0 + 64, y0 + 80);
+    LCD.print("CH17");
+    LCD.setCursor(x0 + 64, y0 + 90);
+    LCD.print("CH18");
+    LCD.setCursor(x0 + 64, y0 + 100);
+    LCD.print("CH19");
+    LCD.setCursor(x0 + 64, y0 + 110);
+    LCD.print("CH20");
+  }
+  DrawBat (analogRead(Bat_PIN), 109, 0);
+  if (_buf[0] != buf[0] || first_frame == 0 ) {
+    _buf[0] = buf[0];
+    LCD.fillRect(x0 + 28, y0 + 20, 30, 8, BLACK);
+    LCD.setCursor(x0 + 28, y0 + 20);
+    LCD.print(buf[0]);
+  }
+  first_frame = 1;
+}
+
+
+
+void Display2 () {
   if (!first_frame) {
     first_frame = 1;
     LCD.fillScreen(BLACK);
@@ -39,7 +111,7 @@ void Display1 () {
   LCD.print(rx_connect[0]);
 
 }
-void Display2 () {
+void Display3 () {
   if (!first_frame) {
     first_frame = 1;
     LCD.fillScreen(BLACK);
@@ -49,28 +121,28 @@ void Display2 () {
 }
 
 void DrawBat (uint8_t charge, uint8_t x0, uint8_t y0) {
-  if (charge < 64) {
+  if (charge < 256) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 64 && charge < 128 ) {
+  } else if (charge >= 256 && charge < 512 ) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 128 && charge < 192 ) {
+  } else if (charge >= 512 && charge < 768 ) {
     LCD.drawRect(x0, y0, 19, 7, YELLOW);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, YELLOW);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, YELLOW);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, YELLOW);
-  } else if (charge >= 192) {
+  } else if (charge >= 768) {
     LCD.drawRect(x0, y0, 19, 7, RED);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, RED);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
@@ -211,4 +283,23 @@ void Display_TestKey () {
   LCD.setCursor(x0 + 96, y0 + 80);
   LCD.print(read_data [19]);
   LCD.setTextColor(WHITE, BLACK);
+}
+
+void Display_Logo () {
+  LCD.fillScreen(BLACK);
+  LCD.setTextColor(WHITE);
+  LCD.setTextSize(2);
+  LCD.setCursor(0, 30);
+  LCD.print("TRANSM");
+  LCD.setCursor(70, 30);
+  LCD.print("I");
+  LCD.setCursor(80, 30);
+  LCD.print("TTER");
+  LCD.setTextSize(1);
+  LCD.setTextColor(BLUE);
+  LCD.setCursor(37, 50);
+  LCD.print("by SPChip");
+  LCD.setCursor(41, 70);
+  LCD.setTextColor(RED);
+  LCD.print("ver 2.0");
 }
