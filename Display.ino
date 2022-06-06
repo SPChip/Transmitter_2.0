@@ -4,6 +4,10 @@ void Display() {
     switch (dysplayMode) {
       case 1:
         Display1 ();
+        LCD.setTextColor(YELLOW);
+        LCD.fillRect(31, 15, 40, 8, BLACK);
+        LCD.setCursor(31, 15);
+        LCD.print (SET_NAME[cur_set]);
         break;
       case 2:
         Display2();
@@ -19,68 +23,73 @@ void Display() {
 }
 
 void Display1 () {
-  uint8_t x0 = 2, y0 = 10;
+  uint8_t x0 = 0, y0 = 0;
   if (!first_frame) {
-
     LCD.fillScreen(BLACK);
-    LCD.drawFastVLine(62, y0 + 20, 97, WHITE);
-    LCD.drawFastVLine(0, y0 + 20, 97, WHITE);
-    LCD.drawFastVLine(26, y0 + 20, 97, WHITE);
-    LCD.drawFastVLine(56, y0 + 20, 97, WHITE);
-    LCD.drawFastHLine(0, y0 + 18, 56, WHITE);
-    LCD.drawFastHLine(0, y0 + 28, 56, WHITE);
-    LCD.drawFastHLine(0, y0 + 38, 56, WHITE);
-    LCD.drawFastHLine(0, y0 + 48, 56, WHITE);
     LCD.setTextColor(CYAN);
     LCD.setTextSize(1);
-    LCD.setCursor(x0, y0 + 20);
-    LCD.print("CH01");
-    LCD.setCursor(x0, y0 + 30);
-    LCD.print("CH02");
-    LCD.setCursor(x0, y0 + 40);
-    LCD.print("CH03");
-    LCD.setCursor(x0, y0 + 50);
-    LCD.print("CH04");
-    LCD.setCursor(x0, y0 + 60);
-    LCD.print("CH05");
-    LCD.setCursor(x0, y0 + 70);
-    LCD.print("CH06");
-    LCD.setCursor(x0, y0 + 80);
-    LCD.print("CH07");
-    LCD.setCursor(x0, y0 + 90);
-    LCD.print("CH08");
-    LCD.setCursor(x0, y0 + 100);
-    LCD.print("CH09");
-    LCD.setCursor(x0, y0 + 110);
-    LCD.print("CH10");
-    LCD.setCursor(x0 + 64, y0 + 20);
-    LCD.print("CH11");
-    LCD.setCursor(x0 + 64, y0 + 30);
-    LCD.print("CH12");
-    LCD.setCursor(x0 + 64, y0 + 40);
-    LCD.print("CH13");
-    LCD.setCursor(x0 + 64, y0 + 50);
-    LCD.print("CH14");
-    LCD.setCursor(x0 + 64, y0 + 60);
-    LCD.print("CH15");
-    LCD.setCursor(x0 + 64, y0 + 70);
-    LCD.print("CH16");
-    LCD.setCursor(x0 + 64, y0 + 80);
-    LCD.print("CH17");
-    LCD.setCursor(x0 + 64, y0 + 90);
-    LCD.print("CH18");
-    LCD.setCursor(x0 + 64, y0 + 100);
-    LCD.print("CH19");
-    LCD.setCursor(x0 + 64, y0 + 110);
-    LCD.print("CH20");
+    LCD.drawFastVLine(x0 + 4, y0 + 27, 101, WHITE);
+    LCD.drawFastVLine(x0 + 4 + 29, y0 + 27, 101, WHITE);
+    LCD.drawFastVLine(x0 + 4 + 53, y0 + 27, 101, WHITE);
+    LCD.drawFastHLine(x0 + 4, y0 + 27, 53, WHITE);
+    for (uint8_t i = 0; i < 10; i++) {
+      LCD.drawFastHLine(x0 + 4, y0 + 37 + 10 * i, 53, WHITE);
+      LCD.setCursor(x0 + 7, y0 + 29 + 10 * i);
+      LCD.print("CH");
+      if (i < 9)  LCD.print(" ");
+      LCD.print(i + 1);
+    }
+
+    LCD.drawFastVLine(x0 + 70, y0 + 27, 101, WHITE);
+    LCD.drawFastVLine(x0 + 70 + 29, y0 + 27, 101, WHITE);
+    LCD.drawFastVLine(x0 + 70 + 53, y0 + 27, 101, WHITE);
+    LCD.drawFastHLine(x0 + 70, y0 + 27, 53, WHITE);
+    for (uint8_t i = 10; i < 20; i++) {
+      LCD.drawFastHLine(x0 + 70, y0 + 37 + 10 * (i - 10), 53, WHITE);
+      LCD.setCursor(x0 + 73, y0 + 29 + 10 * (i - 10));
+      LCD.print("CH");
+      LCD.print(i + 1);
+    }
+
+    LCD.setTextColor(BLUE);
+    LCD.setCursor(4, 15);
+    LCD.print ("SET:");
+
   }
+  for (uint8_t i = 0; i < 5; i++) {
+    if (_rx_connect[i] != rx_connect[i] || first_frame == 0 ) {
+      _rx_connect[i] = rx_connect[i];
+      if (rx_connect[i]) LCD.setTextColor(GREEN);
+      else LCD.setTextColor(RED);
+      LCD.setCursor(x0 + i * 21, y0);
+      LCD.print("RX");
+      LCD.print(i + 1);
+    }
+  }
+
+
+
   DrawBat (analogRead(Bat_PIN), 109, 0);
-  if (_buf[0] != buf[0] || first_frame == 0 ) {
-    _buf[0] = buf[0];
-    LCD.fillRect(x0 + 28, y0 + 20, 30, 8, BLACK);
-    LCD.setCursor(x0 + 28, y0 + 20);
-    LCD.print(buf[0]);
+  LCD.setTextColor(ORANGE);
+  for (uint8_t i = 0; i < 10; i++) {
+    if (abs(_buf[i] - buf[i]) > 1 || first_frame == 0 ) {
+      _buf[i] = buf[i];
+      LCD.fillRect(x0 + 37, y0 + 29 + 10 * i, 20, 8, BLACK);
+      LCD.setCursor(x0 + 37, y0 + 29 + 10 * i);
+      LCD.print(buf[i]);
+    }
   }
+  for (uint8_t i = 10; i < 20; i++) {
+    if (abs(_buf[i] - buf[i]) > 1 || first_frame == 0 ) {
+      _buf[i] = buf[i];
+      LCD.fillRect(x0 + 103, y0 + 29 + 10 * (i - 10), 20, 8, BLACK);
+      LCD.setCursor(x0 + 103, y0 + 29 + 10 * (i - 10));
+      LCD.print(buf[i]);
+    }
+  }
+
+
+
   first_frame = 1;
 }
 

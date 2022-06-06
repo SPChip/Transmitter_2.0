@@ -111,6 +111,8 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
   {18, 0, 255},      //CH18 - SW3
   {19, 0, 255},      //CH19 - SW4
 };
+char* SET_NAME[] = {"Default", "Lego", "Train", "Car"};
+
 //--------------------- КОНСТАНТЫ ----------------------
 
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
@@ -120,12 +122,13 @@ uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; /
 uint16_t transmit_data[10];        // массив пересылаемых данных
 uint8_t buf[20], _buf[20];
 uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
-bool rx_connect[6];
+bool rx_connect[5], _rx_connect[5];
 //uint16_t rx2_telemetry[2];            // массив принятых от приёмника данных телеметрии
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 bool first_frame = 0;
 uint8_t dysplayMode = 1;
+uint8_t cur_set = 0;
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
 
@@ -138,9 +141,11 @@ void setup() {
   pinMode(Bat_PIN, INPUT);
   pinMode(STDBY_PIN, INPUT_PULLUP);
   pinMode(CHRG_PIN, INPUT_PULLUP);
+  KEY1.setTimeout(1500);                    // настраиваем таймаут для долгого нажатия кнопки 1
+  KEY2.setTimeout(1500);
+  KEY3.setTimeout(1500);
   digitalWrite(PinPower_PIN, HIGH);    // держим питание включенным
-
-  LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab  
+  LCD.initR(INITR_144GREENTAB); // Init ST7735R chip, green tab
   Display_Logo ();
   delay(1000);
   LCD.fillScreen(BLACK);
@@ -166,14 +171,18 @@ void loop() {
 
   //Serial.print(telemetry[0]);
   //Serial.println(" | ");
-  if (KEY1.isClick() || KEY1.isStep()) digitalWrite(PinPower_PIN, LOW);    // проверка на один клик
+  if (KEY1.isHolded()) digitalWrite(PinPower_PIN, LOW);
 
-  if (KEY2.isClick() || KEY2.isStep()) {                          // если кнопка 2 нажата переключаем режим отображения
+  if (KEY2.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode--;                               // переходим к следующему режиму экрана
     if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
     first_frame = 0;
   }
-  if (KEY3.isClick() || KEY3.isStep()) {                          // если кнопка 2 нажата переключаем режим отображения
+  if (KEY2.isHolded() && dysplayMode == 1) {
+    Settings_Display1();
+  }
+
+  if (KEY3.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode++;                               // переходим к следующему режиму экрана
     if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов
     first_frame = 0;
