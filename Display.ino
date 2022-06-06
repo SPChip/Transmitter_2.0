@@ -4,10 +4,21 @@ void Display() {
     switch (dysplayMode) {
       case 1:
         Display1 ();
-        LCD.setTextColor(YELLOW);
-        LCD.fillRect(31, 15, 40, 8, BLACK);
-        LCD.setCursor(31, 15);
-        LCD.print (SET_NAME[cur_set]);
+        if (_cur_set != cur_set || first_frame == 0) {
+          _cur_set = cur_set;
+          LCD.setTextColor(YELLOW);
+          LCD.fillRect(25, 15, 45, 8, BLACK);
+          LCD.setCursor(25, 15);
+          LCD.print (SET_NAME[cur_set]);
+        }
+        if (_cur_pwr != cur_pwr || first_frame == 0) {
+          _cur_pwr = cur_pwr;
+          LCD.setTextColor(YELLOW);
+          LCD.fillRect(100, 15, 45, 8, BLACK);
+          LCD.setCursor(100, 15);
+          LCD.print (SET_PWR[cur_pwr]);
+        }
+        first_frame = 1;
         break;
       case 2:
         Display2();
@@ -52,8 +63,12 @@ void Display1 () {
     }
 
     LCD.setTextColor(BLUE);
-    LCD.setCursor(4, 15);
+    LCD.setCursor(0, 15);
     LCD.print ("SET:");
+
+    LCD.setCursor(75, 15);
+    LCD.print ("PWR:");
+
 
   }
   for (uint8_t i = 0; i < 5; i++) {
@@ -68,8 +83,14 @@ void Display1 () {
   }
 
 
+  if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
+    else {
+      static uint16_t crg;
+      DrawBat (crg, 109, 0);
+      crg=crg+40;
+      if (crg > 1022) crg = 0;
+    }
 
-  DrawBat (analogRead(Bat_PIN), 109, 0);
   LCD.setTextColor(ORANGE);
   for (uint8_t i = 0; i < 10; i++) {
     if (abs(_buf[i] - buf[i]) > 1 || first_frame == 0 ) {
@@ -90,7 +111,7 @@ void Display1 () {
 
 
 
-  first_frame = 1;
+
 }
 
 
@@ -125,33 +146,33 @@ void Display3 () {
     first_frame = 1;
     LCD.fillScreen(BLACK);
   }
-  DrawBat (buf[0], 109, 0);
-  DrawBat (buf[2], 2, 0);
+  DrawBat (read_data [0], 109, 0);
+  DrawBat (read_data [2], 2, 0);
 }
 
-void DrawBat (uint8_t charge, uint8_t x0, uint8_t y0) {
-  if (charge < 256) {
+void DrawBat (uint16_t charge, uint8_t x0, uint8_t y0) {
+  if (charge >= 768) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 256 && charge < 512 ) {
+  } else if (charge >= 512 && charge < 768 ) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 512 && charge < 768 ) {
+  } else if (charge >= 256 && charge < 512 ) {
     LCD.drawRect(x0, y0, 19, 7, YELLOW);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, YELLOW);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, YELLOW);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, YELLOW);
-  } else if (charge >= 768) {
+  } else if (charge <256) {
     LCD.drawRect(x0, y0, 19, 7, RED);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, RED);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);

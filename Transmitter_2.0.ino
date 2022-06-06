@@ -83,9 +83,10 @@ GButton KEY1(KEY1_PIN, LOW_PULL, NORM_OPEN);       // настраиваем к�
 GButton KEY2(KEY2_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 1
 GButton KEY3(KEY3_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 1
 
-Adafruit_ST7735 LCD = Adafruit_ST7735(CS_PIN, DC_PIN, RES_PIN);
-RF24 RADIO(CE_PIN, CSN_PIN);                       // "создать" модуль на пинах 9 и 10
+Adafruit_ST7735 LCD = Adafruit_ST7735(CS_PIN, DC_PIN, RES_PIN); // создем дисплей
+RF24 RADIO(CE_PIN, CSN_PIN);                       // "создать" радиомодуль на пинах 9 и 10
 GTimer LCD_TIMER(MS, 100);                        // создаем таймер для отрисовки дисплея
+GTimer BLINK_TIMER(MS, 250);
 //--------------------- ОБЪЕКТЫ ----------------------
 
 //--------------------- КОНСТАНТЫ ----------------------
@@ -112,6 +113,7 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
   {19, 0, 255},      //CH19 - SW4
 };
 char* SET_NAME[] = {"Default", "Lego", "Train", "Car"};
+char* SET_PWR[] = {"Min", "Low", "High", "Max"};
 
 //--------------------- КОНСТАНТЫ ----------------------
 
@@ -128,7 +130,8 @@ uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 bool first_frame = 0;
 uint8_t dysplayMode = 1;
-uint8_t cur_set = 0;
+int8_t cur_set = 0, _cur_set = 0;
+int8_t cur_pwr = 0, _cur_pwr = 0;
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
 
@@ -151,7 +154,7 @@ void setup() {
   LCD.fillScreen(BLACK);
   delay(100);
   Wire.begin();
-  RadioSetup();
+  RadioSetup(cur_pwr);
   if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
     EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
     EEPROM.put(100, set_default);           // настройка каналов до заводских
@@ -176,16 +179,18 @@ void loop() {
   if (KEY2.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode--;                               // переходим к следующему режиму экрана
     if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
-    first_frame = 0;
+    else first_frame = 0;
   }
   if (KEY2.isHolded() && dysplayMode == 1) {
-    Settings_Display1();
+    Settings_Preset();
   }
-
+  if (KEY3.isHolded() && dysplayMode == 1) {
+    Settings_PWR();
+  }
   if (KEY3.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode++;                               // переходим к следующему режиму экрана
     if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов
-    first_frame = 0;
+    else first_frame = 0;
   }
 
 
