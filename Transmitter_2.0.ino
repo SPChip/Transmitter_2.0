@@ -87,6 +87,8 @@ Adafruit_ST7735 LCD = Adafruit_ST7735(CS_PIN, DC_PIN, RES_PIN); // создем 
 RF24 RADIO(CE_PIN, CSN_PIN);                       // "создать" радиомодуль на пинах 9 и 10
 GTimer LCD_TIMER(MS, 100);                        // создаем таймер для отрисовки дисплея
 GTimer BLINK_TIMER(MS, 250);
+
+
 //--------------------- ОБЪЕКТЫ ----------------------
 
 //--------------------- КОНСТАНТЫ ----------------------
@@ -112,8 +114,9 @@ uint8_t set_default[20][3] = {          // настройка каналов п�
   {18, 0, 255},      //CH18 - SW3
   {19, 0, 255},      //CH19 - SW4
 };
-char* SET_NAME[] = {"Default", "Lego", "Train", "Car"};
+char* SET_NAME[] = {"Default", "Lego", "Train", "Car", "User1", "User2"};
 char* SET_PWR[] = {"Min", "Low", "High", "Max"};
+char* NAME_KEY[] = {"J1X", "J1Y", "J2X", "J2Y", "RP1", "RP2", "LFT", "UP", "DWN", "RHT", "YEL", "WHT", "BLU", "RED", "J1K", "J2K", "SW1", "SW2", "SW3", "SW4"};
 
 //--------------------- КОНСТАНТЫ ----------------------
 
@@ -129,12 +132,49 @@ bool rx_connect[5], _rx_connect[5];
 uint8_t rssi;                     //
 uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
 bool first_frame = 0;
-uint8_t dysplayMode = 1;
+uint8_t dysplayMode = 3;
 int8_t cur_set = 0, _cur_set = 0;
 int8_t cur_pwr = 0, _cur_pwr = 0;
+uint16_t crg = 600;
+int16_t first_line = 0, cur_line = 0, cur_y = 0, cur_x = 0;
+
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
-
+//--------------------- КЛАССЫ ----------------------
+class button {
+  public:
+    button (byte in) {   //номер из массива read_data []
+      _in = in;
+    }
+    bool clickBtn() {
+      bool btnState = read_data[_in];
+      if (btnState && !_flag && millis() - _tmr >= 100) {
+        _flag = true;
+        _tmr = millis();
+        return true;
+      }
+      if (btnState && _flag && millis() - _tmr >= 300) {
+        _tmr = millis ();
+        return true;
+      }
+      if (!btnState && _flag) {
+        _flag = false;
+        _tmr = millis();
+      }
+      return false;
+    }
+  private:
+    byte _in;
+    uint32_t _tmr;
+    bool _flag;
+};
+//--------------------- КЛАССЫ ----------------------
+button UP_KEY(7); // указываем пин
+button DOWN_KEY(8); // указываем пин
+button RIGHT_KEY(9); // указываем пин
+button LEFT_KEY(6); // указываем пин
+button WHITE_KEY(11); // указываем пин
+button BLUE_KEY(12); // указываем пин
 
 void setup() {
   Serial.begin(9600);
@@ -172,25 +212,30 @@ void loop() {
   Radio_TX_RX(1);
   Display();
 
-  //Serial.print(telemetry[0]);
+  Serial.println(dysplayMode);
   //Serial.println(" | ");
   if (KEY1.isHolded()) digitalWrite(PinPower_PIN, LOW);
 
   if (KEY2.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
     dysplayMode--;                               // переходим к следующему режиму экрана
     if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
-    else first_frame = 0;
+    first_frame = 0;
   }
-  if (KEY2.isHolded() && dysplayMode == 1) {
-    Settings_Preset();
-  }
-  if (KEY3.isHolded() && dysplayMode == 1) {
-    Settings_PWR();
-  }
-  if (KEY3.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
+  if (KEY3.isClick()) {                          // если кнопка 3 нажата переключаем режим отображения
     dysplayMode++;                               // переходим к следующему режиму экрана
     if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов
-    else first_frame = 0;
+    first_frame = 0;
+  }
+  if (dysplayMode == 1 && KEY2.isHolded()) {
+    Settings_Preset();
+  }
+  if (dysplayMode == 1 && KEY3.isHolded()) {    
+    Settings_PWR();
+  }
+  if (dysplayMode == 3 && KEY3.isHolded()) {
+    
+    Settings_CH();
+
   }
 
 

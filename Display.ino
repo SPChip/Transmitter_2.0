@@ -1,5 +1,5 @@
 void Display() {
-  Serial.println(dysplayMode);
+  //Serial.println(dysplayMode);
   if (LCD_TIMER.isReady()) {
     switch (dysplayMode) {
       case 1:
@@ -22,12 +22,15 @@ void Display() {
         break;
       case 2:
         Display2();
+        first_frame = 1;
         break;
       case 3:
         Display3();
+        first_frame = 1;
         break;
       case 4:
         Display_TestKey ();
+        first_frame = 1;
         break;
     }
   }
@@ -39,10 +42,12 @@ void Display1 () {
     LCD.fillScreen(BLACK);
     LCD.setTextColor(CYAN);
     LCD.setTextSize(1);
+    // табличка левая вертикальные линии
     LCD.drawFastVLine(x0 + 4, y0 + 27, 101, WHITE);
     LCD.drawFastVLine(x0 + 4 + 29, y0 + 27, 101, WHITE);
     LCD.drawFastVLine(x0 + 4 + 53, y0 + 27, 101, WHITE);
     LCD.drawFastHLine(x0 + 4, y0 + 27, 53, WHITE);
+    // табличка первая горизонтальные линии и надпись CH
     for (uint8_t i = 0; i < 10; i++) {
       LCD.drawFastHLine(x0 + 4, y0 + 37 + 10 * i, 53, WHITE);
       LCD.setCursor(x0 + 7, y0 + 29 + 10 * i);
@@ -84,12 +89,11 @@ void Display1 () {
 
 
   if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
-    else {
-      static uint16_t crg;
-      DrawBat (crg, 109, 0);
-      crg=crg+40;
-      if (crg > 1022) crg = 0;
-    }
+  else {
+    DrawBat (crg, 109, 0);
+    crg = crg + 10;
+    if (crg > 860) crg = 600;
+  }
 
   LCD.setTextColor(ORANGE);
   for (uint8_t i = 0; i < 10; i++) {
@@ -141,38 +145,87 @@ void Display2 () {
   LCD.print(rx_connect[0]);
 
 }
-void Display3 () {
-  if (!first_frame) {
-    first_frame = 1;
-    LCD.fillScreen(BLACK);
-  }
-  DrawBat (read_data [0], 109, 0);
-  DrawBat (read_data [2], 2, 0);
-}
 
+
+void Display3 () {
+  uint8_t x0 = 0, y0 = 0;
+  if (!first_frame) {
+    LCD.fillScreen(BLACK);
+    LCD.setTextSize(1);
+    LCD.setTextColor(BLUE);
+    LCD.setCursor(0, 0);
+    LCD.print ("SET:");
+    // табличка вертикальные линии
+    LCD.drawFastVLine(4, 27, 101, WHITE);
+    LCD.drawFastVLine(33, 27, 101, WHITE);
+    LCD.drawFastVLine(56, 27, 101, WHITE);
+    LCD.drawFastVLine(79, 27, 101, WHITE);
+    LCD.drawFastVLine(102, 27, 101, WHITE);
+    // верхняя горизонтальная линия
+    LCD.drawFastHLine(4, 27, 98, WHITE);
+    // табличка горизонтальные линии и надпись CH
+    LCD.setTextColor(CYAN);
+    for (uint8_t i = 0; i < 10; i++) {
+      LCD.drawFastHLine(4, 37 + 10 * i, 98, WHITE);
+      LCD.setCursor(7, 29 + i * 10);
+      LCD.print("CH");
+    }
+  }
+  //значок батареи
+  if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
+  else {
+    DrawBat (crg, 109, 0);
+    crg = crg + 10;
+    if (crg > 860) crg = 600;
+  }
+  //текущий пресет
+  if (_cur_set != cur_set || first_frame == 0) {
+    _cur_set = cur_set;
+    LCD.setTextColor(YELLOW);
+    LCD.fillRect(25, 0, 45, 8, BLACK);
+    LCD.setCursor(25, 0);
+    LCD.print (SET_NAME[cur_set]);
+  }
+
+  if (!first_frame) {
+    for (uint8_t i = 0; i < 20; i++) {
+      uint16_t _y = 28 + i * 10;
+      LCD.setTextColor(CYAN);
+      if (i + 1 + first_line < 10) LCD.setCursor(23, _y + 1);
+      else LCD.setCursor(19, _y + 1);
+      LCD.print (i + 1 + first_line);     //номера каналов
+      for (uint8_t j = 0; j < 3; j++) {
+        uint16_t _x = 34 + j * 23;       
+        LCD.setCursor(_x + 2, _y + 1);
+        if (j == 0)LCD.print (NAME_KEY[current_settings[i + first_line][j]]);
+        else LCD.print (current_settings[i + first_line][j]);
+      }
+    }
+  }
+}
 void DrawBat (uint16_t charge, uint8_t x0, uint8_t y0) {
-  if (charge >= 768) {
+  if (charge >= 791) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 512 && charge < 768 ) {
+  } else if (charge >= 723 && charge < 791 ) {
     LCD.drawRect(x0, y0, 19, 7, GREEN);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, GREEN);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, GREEN);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, GREEN);
-  } else if (charge >= 256 && charge < 512 ) {
+  } else if (charge >= 655 && charge < 723 ) {
     LCD.drawRect(x0, y0, 19, 7, YELLOW);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, YELLOW);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 6, y0 + 2, 3, 3, BLACK);
     LCD.fillRect(x0 + 10, y0 + 2, 3, 3, YELLOW);
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, YELLOW);
-  } else if (charge <256) {
+  } else if (charge < 655) {
     LCD.drawRect(x0, y0, 19, 7, RED);
     LCD.drawRect(x0 - 2, y0 + 2, 2, 3, RED);
     LCD.fillRect(x0 + 2, y0 + 2, 3, 3, BLACK);
