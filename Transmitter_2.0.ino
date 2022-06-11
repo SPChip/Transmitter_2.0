@@ -2,7 +2,7 @@
 
 //--------------------- НАСТРОЙКИ ----------------------
 #define INIT_ADDR 1023        // номер резервной ячейки для инициализации первого запуска
-#define INIT_KEY 55           // ключ первого запуска. 0-99, на выбор, надо поменять на любое значение и будет как впервый раз
+#define INIT_KEY 77           // ключ первого запуска. 0-99, на выбор, надо поменять на любое значение и будет как впервый раз
 #define KEY1_PIN 11           // кнопка KEY1 подключена сюда 
 #define KEY2_PIN 5
 #define KEY3_PIN 13
@@ -21,7 +21,7 @@
 #define J2Y_pin A0
 #define RP1_pin A11
 #define RP2_pin A7
-#define CH_NUM 0x7a           // номер канала (должен совпадать с приёмником)
+#define CH_NUM 0x05           // номер канала (должен совпадать с приёмником)
 #define SIG_POWER RF24_PA_LOW // УРОВЕНЬ МОЩНОСТИ ПЕРЕДАТЧИКА На выбор RF24_PA_MIN, RF24_PA_LOW, RF24_PA_HIGH, RF24_PA_MAX
 #define SIG_SPEED RF24_1MBPS  // СКОРОСТЬ ОБМЕНА На выбор RF24_2MBPS, RF24_1MBPS, RF24_250KBPS должна быть одинакова на приёмнике и передатчике! при самой низкой скорости имеем самую высокую чувствительность и дальность!! ВНИМАНИЕ!!! enableAckPayload НЕ РАБОТАЕТ НА СКОРОСТИ 250 kbps!
 #define BLACK 0x0000
@@ -79,9 +79,9 @@
 //--------------------- БИБЛИОТЕКИ ----------------------
 
 //--------------------- ОБЪЕКТЫ ----------------------
-GButton KEY1(KEY1_PIN, LOW_PULL, NORM_OPEN);       // настраиваем кнопку 1
-GButton KEY2(KEY2_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 1
-GButton KEY3(KEY3_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 1
+GButton KEY1(KEY1_PIN, LOW_PULL, NORM_OPEN);        // настраиваем кнопку 1
+GButton KEY2(KEY2_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 2
+GButton KEY3(KEY3_PIN, HIGH_PULL, NORM_OPEN);       // настраиваем кнопку 3
 
 Adafruit_ST7735 LCD = Adafruit_ST7735(CS_PIN, DC_PIN, RES_PIN); // создем дисплей
 RF24 RADIO(CE_PIN, CSN_PIN);                       // "создать" радиомодуль на пинах 9 и 10
@@ -126,17 +126,21 @@ uint8_t current_settings[20][3];   // массив с текущими наст�
 uint8_t address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // возможные номера труб
 uint16_t transmit_data[10];        // массив пересылаемых данных
 uint8_t buf[20], _buf[20];
-uint16_t telemetry[2];            // массив принятых от приёмника данных телеметрии
+uint16_t telemetry[5];            // массив принятых от приёмника данных телеметрии
 bool rx_connect[5], _rx_connect[5];
-//uint16_t rx2_telemetry[2];            // массив принятых от приёмника данных телеметрии
-uint8_t rssi;                     //
-uint16_t trnsmtd_pack = 1, failed_pack; // переданные и потерянные пакеты
+uint8_t rssi[5];                     //
+uint16_t trnsmtd_pack[] ={1, 1, 1, 1, 1}, failed_pack[5]; // переданные и потерянные пакеты
 bool first_frame = 0;
-uint8_t dysplayMode = 3;
-int8_t cur_set = 0, _cur_set = 0;
-int8_t cur_pwr = 0, _cur_pwr = 0;
+int8_t _cur_set = 0;
+int8_t _cur_pwr = 0;
 uint16_t crg = 600;
-int16_t first_line = 0, cur_line = 0, cur_y = 0, cur_x = 0;
+int16_t first_line = 0, cur_y = 0, cur_x = 0;
+struct  {                //структура для хранения данных в eeprom
+  uint8_t dysplayMode;       //режим экрана
+  int8_t pwr;                //мощность передатчика
+  int8_t set;                //текущий пресет
+  uint8_t data_set [6][20][3]; //массив с массивами пресетов
+} data;
 
 //--------------------- ПЕРЕМЕННЫЕ ----------------------
 
@@ -148,12 +152,12 @@ class button {
     }
     bool clickBtn() {
       bool btnState = read_data[_in];
-      if (btnState && !_flag && millis() - _tmr >= 100) {
+      if (btnState && !_flag && millis() - _tmr >= 50) {
         _flag = true;
         _tmr = millis();
         return true;
       }
-      if (btnState && _flag && millis() - _tmr >= 300) {
+      if (btnState && _flag && millis() - _tmr >= 125) {
         _tmr = millis ();
         return true;
       }
@@ -176,6 +180,7 @@ button LEFT_KEY(6); // указываем пин
 button WHITE_KEY(11); // указываем пин
 button BLUE_KEY(12); // указываем пин
 
+
 void setup() {
   Serial.begin(9600);
   pinMode(PinPower_PIN, OUTPUT);       // пин управления питанием
@@ -194,12 +199,29 @@ void setup() {
   LCD.fillScreen(BLACK);
   delay(100);
   Wire.begin();
-  RadioSetup(cur_pwr);
   if (EEPROM.read(INIT_ADDR) != INIT_KEY) { // первый запуск
     EEPROM.write(INIT_ADDR, INIT_KEY);      // записали ключ
-    EEPROM.put(100, set_default);           // настройка каналов до заводских
+    data.dysplayMode = 1;
+    data.pwr = 0;
+    data.set = 0;
+    for (uint8_t i = 0; i < 6; i++) {
+      for (uint8_t j = 0; j < 20; j++) {
+        for (uint8_t q = 0; q < 3; q++) {
+          data.data_set [i][j][q] = set_default[j][q] ;
+          Serial.println(data.data_set [i][j][q]);
+        }
+      }
+    }
+    EEPROM.put(0, data);           // настройка
   }
-  EEPROM.get(100, current_settings);        // читаем настройки каналов из eeprom
+  EEPROM.get(0, data);        // читаем настройки каналов из eeprom
+  RadioSetup(data.pwr);
+
+  for (uint8_t i = 0; i < 20; i++) {
+    for (uint8_t j = 0; j < 3; j++) {
+      current_settings[i][j] = data.data_set [data.set][i][j];
+    }
+  }
 }
 
 void loop() {
@@ -208,37 +230,43 @@ void loop() {
   KEY3.tick();
   ReadData();                                    // опрашиваем все кнопки и крутилки
   PackForTX();
-  Radio_TX_RX(0);
-  Radio_TX_RX(1);
+  for (uint8_t i = 0; i < 5; i++) {
+    Radio_TX_RX(i);
+  }
   Display();
 
-  Serial.println(dysplayMode);
-  //Serial.println(" | ");
   if (KEY1.isHolded()) digitalWrite(PinPower_PIN, LOW);
 
   if (KEY2.isClick()) {                          // если кнопка 2 нажата переключаем режим отображения
-    dysplayMode--;                               // переходим к следующему режиму экрана
-    if (dysplayMode < 1) dysplayMode = 1;        // максимум 3 экранов
     first_frame = 0;
+    data.dysplayMode--;                               // переходим к следующему режиму экрана
+    if (data.dysplayMode < 1) {
+      data.dysplayMode = 1;
+      first_frame = 1;
+    }
+    EEPROM.put(0, data);
   }
   if (KEY3.isClick()) {                          // если кнопка 3 нажата переключаем режим отображения
-    dysplayMode++;                               // переходим к следующему режиму экрана
-    if (dysplayMode > 4) dysplayMode = 4;        // максимум 3 экранов
     first_frame = 0;
+    data.dysplayMode++;                               // переходим к следующему режиму экрана
+    if (data.dysplayMode > 3) {
+      data.dysplayMode = 3;        // максимум 3 экранов
+      first_frame = 1;
+    }
+    EEPROM.put(0, data);
   }
-  if (dysplayMode == 1 && KEY2.isHolded()) {
-    Settings_Preset();
+  if (data.dysplayMode == 1 && KEY2.isHolded()) {
+    Settings_Preset(1);
   }
-  if (dysplayMode == 1 && KEY3.isHolded()) {    
+  if (data.dysplayMode == 1 && KEY3.isHolded()) {
     Settings_PWR();
   }
-  if (dysplayMode == 3 && KEY3.isHolded()) {
-    
-    Settings_CH();
-
+  if (data.dysplayMode == 3 && KEY2.isHolded()) {
+    Settings_Preset(3);
   }
-
-
+  if (data.dysplayMode == 3 && KEY3.isHolded()) {
+    Settings_CH();
+  }
 }
 
 

@@ -1,9 +1,13 @@
 void Settings_CH() {
   uint8_t _i, _j;                       //сюда запишем координаты настраиваемой ячейки массива текущих настроек
-  LCD.fillScreen(BLACK);                //очищаем экран
-  LCD.setTextColor(BLUE);               //цвет текста
-  LCD.setCursor(0, 0);                  //курсор в начало
-  LCD.print ("SET:");                   //печатем
+  LCD.fillScreen(BLACK);
+  LCD.setTextSize(1);
+  LCD.setTextColor(MAGENTA);
+  LCD.setCursor(0, 0);
+  LCD.print ("Settings channel");
+  LCD.setTextColor(BLUE);
+  LCD.setCursor(0, 15);
+  LCD.print ("SET:");                  //печатем
   // табличка вертикальные линии
   LCD.drawFastVLine(4, 27, 101, WHITE);
   LCD.drawFastVLine(33, 27, 101, WHITE);
@@ -21,8 +25,8 @@ void Settings_CH() {
   }
   first_frame = 0;                      //опускаем флаг отрисовки
   while (!KEY3.isHolded()) {            //пок ане будет удержана кнопка 3
-    KEY1.tick();                                // постоянно проверяем первую кнопку
-    KEY2.tick();                                // постоянно проверяем вторую кнопку
+    //KEY1.tick();                                // постоянно проверяем первую кнопку
+   // KEY2.tick();                                // постоянно проверяем вторую кнопку
     KEY3.tick();                                // постоянно проверяем третью кнопку
     ReadData();                          //опрашиваем кнопки
     PackForTX();                         //пакуем пакет
@@ -61,10 +65,20 @@ void Settings_CH() {
 
     if  (WHITE_KEY.clickBtn()) {
       current_settings[_i + first_line][_j]++;
+      if (_j == 0) {
+        if (current_settings[_i + first_line][_j] > 19)current_settings[_i + first_line][_j] = 0;
+      }
       first_frame = 0;
     }
 
-
+    if  (BLUE_KEY.clickBtn()) {
+      if (_j == 0) {
+        if (current_settings[_i + first_line][_j] == 0) {
+          current_settings[_i + first_line][_j] = 19;
+        } else current_settings[_i + first_line][_j]--;
+      } else current_settings[_i + first_line][_j]--;
+      first_frame = 0;
+    }
     //значок батареи
     if (LCD_TIMER.isReady()) {
       if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
@@ -79,11 +93,11 @@ void Settings_CH() {
       first_frame = 1;
       //текущий пресет
       LCD.setTextColor(YELLOW);
-      LCD.fillRect(25, 0, 45, 8, BLACK);
-      LCD.setCursor(25, 0);
-      LCD.print (SET_NAME[cur_set]);
+      LCD.fillRect(25, 15, 45, 8, BLACK);
+      LCD.setCursor(25, 15);
+      LCD.print (SET_NAME[data.set]);
       // значения массива текущих настроек
-      for (uint8_t i = 0; i < 20; i++) {
+      for (uint8_t i = 0; i < 10; i++) {
         uint16_t _y = 28 + i * 10;
         LCD.fillRect(18 , _y, 15, 9, BLACK);
         LCD.setTextColor(CYAN);
@@ -109,36 +123,19 @@ void Settings_CH() {
 
     }
   }
+  for (uint8_t i = 0; i < 20; i++) {
+    for (uint8_t j = 0; j < 3; j++) {
+      data.data_set [data.set][i][j] = current_settings[i][j];
+    }
+  }
+  EEPROM.put(0, data);
   first_frame = 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void Settings_PWR() {
   bool flagBlink = 1;                           // флаг для мигания изменяемого параметра
   while (!KEY3.isHolded()) {                    // пока не будет удержана кнопка 2
-    KEY1.tick();                                // постоянно проверяем первую кнопку
+    //KEY1.tick();                                // постоянно проверяем первую кнопку
     KEY2.tick();                                // постоянно проверяем вторую кнопку
     KEY3.tick();                                // постоянно проверяем третью кнопку
     ReadData();
@@ -149,62 +146,80 @@ void Settings_PWR() {
       LCD.setCursor(100, 15);
       if (flagBlink) {
         LCD.setTextColor(YELLOW);
-        LCD.print (SET_PWR[cur_pwr]);
+        LCD.print (SET_PWR[data.pwr]);
       } else {
         LCD.setTextColor(BLACK);
-        LCD.print (SET_PWR[cur_pwr]);
+        LCD.print (SET_PWR[data.pwr]);
       }
       flagBlink = !flagBlink;
     }
     if (KEY2.isClick()) {
-      cur_pwr--;
-      if (cur_pwr < 0) cur_pwr = 0;
+      data.pwr--;
+      if (data.pwr < 0) data.pwr = 0;
     }
     if (KEY3.isClick()) {
-      cur_pwr++;
-      if (cur_pwr > 3) cur_pwr = 3;
+      data.pwr++;
+      if (data.pwr > 3) data.pwr = 3;
     }
   }
-  RadioSetup(cur_pwr);
+  EEPROM.put(0, data);
+  RadioSetup(data.pwr);
   LCD.setTextColor(YELLOW);
   LCD.fillRect(100, 15, 45, 8, BLACK);
   LCD.setCursor(100, 15);
-  LCD.print (SET_PWR[cur_pwr]);
+  LCD.print (SET_PWR[data.pwr]);
 }
 
 
-void Settings_Preset() {                        // выбор пресета
+void Settings_Preset(uint8_t disp) {                        // выбор пресета
   bool flagBlink = 1;                           // флаг для мигания изменяемого параметра
   while (!KEY2.isHolded()) {                    // пока не будет удержана кнопка 2
-    KEY1.tick();                                // постоянно проверяем первую кнопку
+    //KEY1.tick();                                // постоянно проверяем первую кнопку
     KEY2.tick();                                // постоянно проверяем вторую кнопку
     KEY3.tick();                                // постоянно проверяем третью кнопку
     ReadData();
     PackForTX();
-    if (LCD_TIMER.isReady())  Display1();
+    if (disp == 1 && LCD_TIMER.isReady()) {
+      Display1();
+      first_frame = 1;
+    }
+    if (disp == 3 && LCD_TIMER.isReady())  {
+      Display3();
+      first_frame = 1;
+    }
+
     if (BLINK_TIMER.isReady()) {
       LCD.fillRect(25, 15, 45, 8, BLACK);
       LCD.setCursor(25, 15);
       if (flagBlink) {
         LCD.setTextColor(YELLOW);
-        LCD.print (SET_NAME[cur_set]);
+        LCD.print (SET_NAME[data.set]);
       } else {
         LCD.setTextColor(BLACK);
-        LCD.print (SET_NAME[cur_set]);
+        LCD.print (SET_NAME[data.set]);
       }
       flagBlink = !flagBlink;
     }
     if (KEY2.isClick()) {
-      cur_set--;
-      if (cur_set < 0) cur_set = 0;
+      data.set--;
+      if (data.set < 0) data.set = 0;
+      first_frame = 0;
     }
     if (KEY3.isClick()) {
-      cur_set++;
-      if (cur_set > 5) cur_set = 5;
+      data.set++;
+      if (data.set > 5) data.set = 5;
+      first_frame = 0;
+    }
+    for (uint8_t i = 0; i < 20; i++) {
+      for (uint8_t j = 0; j < 3; j++) {
+        current_settings[i][j] = data.data_set [data.set][i][j];
+      }
     }
   }
+  EEPROM.put(0, data);
   LCD.setTextColor(YELLOW);
   LCD.fillRect(25, 15, 45, 8, BLACK);
   LCD.setCursor(25, 15);
-  LCD.print (SET_NAME[cur_set]);
+  LCD.print (SET_NAME[data.set]);
+  first_frame = 0;
 }
