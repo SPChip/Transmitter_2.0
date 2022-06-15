@@ -14,6 +14,7 @@ void Radio_TX_RX(uint8_t rx) {                // отправка пакета t
   RADIO.openWritingPipe(address[rx]);         // отправка будет проихводится от имени address[rx]
   if (RADIO.write(&transmit_data, sizeof(transmit_data))) {    //отправляем массив данных и если дошло....
     rx_connect[rx] = 1;
+    trnsmtd_pack[rx]++;
     if (!RADIO.available()) {                 // если получаем пустой ответ
     } else {
       while (RADIO.available() ) {            // если в ответе что-то есть
@@ -21,7 +22,50 @@ void Radio_TX_RX(uint8_t rx) {                // отправка пакета t
       }
     }
   } else {
-     rx_connect[rx] = 0;
+    rx_connect[rx] = 0;
+    failed_pack[rx]++;
+  }
+  switch (rx) {
+    case 0:
+      if (RSSI_TIMER_RX1.isReady()) {
+        rssi[rx] = (1 - ((float)failed_pack[rx] / trnsmtd_pack[rx])) * 100;
+        if (rssi[rx] > 100) rssi[rx] = 0;
+        failed_pack[rx] = 0;
+        trnsmtd_pack[rx] = 0;
+      }
+      break;
+    case 1:
+      if (RSSI_TIMER_RX2.isReady()) {
+        rssi[rx] = (1 - ((float)failed_pack[rx] / trnsmtd_pack[rx])) * 100;
+        if (rssi[rx] > 100) rssi[rx] = 0;
+        failed_pack[rx] = 0;
+        trnsmtd_pack[rx] = 0;
+      }
+      break;
+    case 2:
+      if (RSSI_TIMER_RX3.isReady()) {
+        rssi[rx] = (1 - ((float)failed_pack[rx] / trnsmtd_pack[rx])) * 100;
+        if (rssi[rx] > 100) rssi[rx] = 0;
+        failed_pack[rx] = 0;
+        trnsmtd_pack[rx] = 0;
+      }
+      break;
+    case 3:
+      if (RSSI_TIMER_RX4.isReady()) {
+        rssi[rx] = (1 - ((float)failed_pack[rx] / trnsmtd_pack[rx])) * 100;
+        if (rssi[rx] > 100) rssi[rx] = 0;
+        failed_pack[rx] = 0;
+        trnsmtd_pack[rx] = 0;
+      }
+      break;
+    case 4:
+      if (RSSI_TIMER_RX5.isReady()) {
+        rssi[rx] = (1 - ((float)failed_pack[rx] / trnsmtd_pack[rx])) * 100;
+        if (rssi[rx] > 100) rssi[rx] = 0;
+        failed_pack[rx] = 0;
+        trnsmtd_pack[rx] = 0;
+      }
+      break;
   }
   RADIO.startListening();
 }

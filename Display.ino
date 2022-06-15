@@ -1,5 +1,4 @@
-void Display() {
-  //Serial.println(dysplayMode);
+void Display() {  
   if (LCD_TIMER.isReady()) {
     switch (data.dysplayMode) {
       case 1:
@@ -61,7 +60,6 @@ void Display1 () {
       if (i < 9)  LCD.print(" ");
       LCD.print(i + 1);
     }
-
     LCD.drawFastVLine(70, 27, 101, WHITE);
     LCD.drawFastVLine(99, 27, 101, WHITE);
     LCD.drawFastVLine(123, 27, 101, WHITE);
@@ -72,15 +70,11 @@ void Display1 () {
       LCD.print("CH");
       LCD.print(i + 1);
     }
-
     LCD.setTextColor(BLUE);
     LCD.setCursor(0, 15);
     LCD.print ("SET:");
-
     LCD.setCursor(75, 15);
     LCD.print ("PWR:");
-
-
   }
   for (uint8_t i = 0; i < 5; i++) {
     if (_rx_connect[i] != rx_connect[i] || first_frame == 0 ) {
@@ -92,15 +86,12 @@ void Display1 () {
       LCD.print(i + 1);
     }
   }
-
-
   if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
   else {
     DrawBat (crg, 109, 0);
     crg = crg + 10;
     if (crg > 860) crg = 600;
   }
-
   LCD.setTextColor(ORANGE);
   for (uint8_t i = 0; i < 10; i++) {
     if (abs(_buf[i] - buf[i]) > 1 || first_frame == 0 ) {
@@ -118,35 +109,69 @@ void Display1 () {
       LCD.print(buf[i]);
     }
   }
-
 }
 
 
 
 void Display2 () {
   if (!first_frame) {
-    first_frame = 1;
+
     LCD.fillScreen(BLACK);
-    LCD.setTextColor(WHITE);
-    LCD.setTextSize(2);
-    LCD.setCursor(40, 2);
-    LCD.print("DISP 1");
+    LCD.setTextColor(GREEN);
     LCD.setTextSize(1);
+    LCD.setCursor(0, 0);
+    LCD.print("TX");
+    LCD.setTextColor(WHITE);
+    LCD.setCursor(48, 0);
+    LCD.print("V");
 
   }
-  LCD.fillRect(20, 40, 25, 8, BLACK);
-  LCD.setCursor(20, 40);
-  LCD.print(digitalRead(STDBY_PIN));
-  LCD.fillRect(20, 60, 25, 8, BLACK);
-  LCD.setCursor(20, 60);
-  LCD.print(digitalRead(CHRG_PIN));
-  LCD.setCursor(20, 80);
-  LCD.fillRect(20, 80, 25, 8, BLACK);
-  LCD.print(analogRead(Bat_PIN) * 0.00488);
-  LCD.setCursor(20, 100);
-  LCD.fillRect(20, 100, 25, 8, BLACK);
-  LCD.print(rx_connect[0]);
-
+  //напряжение батареи передатчика
+  if (analogRead(Bat_PIN) - u_tx > 3 || first_frame == 0 ) {
+    u_tx = analogRead(Bat_PIN);
+    LCD.setTextColor(WHITE);
+    LCD.fillRect(20, 0, 28, 8, BLACK);
+    LCD.setCursor(20, 0);
+    LCD.print(analogRead(Bat_PIN) * 0.00488);
+  }
+  //значок батареи передатчика
+  if (digitalRead(STDBY_PIN)) DrawBat (analogRead(Bat_PIN), 109, 0);
+  else {
+    DrawBat (crg, 109, 0);
+    crg = crg + 10;
+    if (crg > 860) crg = 600;
+  }
+  for (uint8_t i = 0; i < 5; i++) {    
+    LCD.setCursor(0, 20 + i * 12);
+    if (rssi[i] > 0) {
+      LCD.setTextColor(GREEN);
+      LCD.print("RX");
+      LCD.print(i + 1);      
+      LCD.print(" ");
+      LCD.setTextColor(WHITE);
+      if (_telemetry[i] != telemetry[i]) {
+        _telemetry[i] = telemetry[i];
+        LCD.fillRect(20, 20 + i * 12, 30, 8, BLACK);
+        LCD.print(telemetry[i] * 0.00488);
+      }
+      LCD.setCursor(51, 20 + i * 12);
+      LCD.print("V ");
+      LCD.setTextColor(GREEN);
+      LCD.print("RSSI ");
+      if (_rssi[i] != rssi[i]) {
+        _rssi[i] = rssi[i];
+        LCD.fillRect(90, 20 + i * 12, 30, 8, BLACK);
+        LCD.print(rssi[i]);
+      }
+      //LCD.print("%");
+    }
+    else {
+      LCD.setTextColor(RED);
+      LCD.print("RX");
+      LCD.print(i + 1);
+      LCD.fillRect(20, 20 + i * 12, 100, 8, BLACK);
+    }    
+  }
 }
 
 
@@ -195,13 +220,12 @@ void Display3 () {
       for (uint8_t j = 0; j < 3; j++) {
         uint16_t _x = 34 + j * 23;
         LCD.setCursor(_x + 2, _y + 1);
-        if (j == 0)LCD.print (NAME_KEY[current_settings[i + first_line][j]]);
-        else LCD.print (current_settings[i + first_line][j]);
+        if (j == 0)LCD.print (NAME_KEY[data.data_set [data.set][i + first_line][j]]);
+        else LCD.print (data.data_set [data.set][i + first_line][j]);
       }
     }
   }
 }
-
 
 
 void DrawBat (uint16_t charge, uint8_t x0, uint8_t y0) {
@@ -235,7 +259,6 @@ void DrawBat (uint16_t charge, uint8_t x0, uint8_t y0) {
     LCD.fillRect(x0 + 14, y0 + 2, 3, 3, RED);
   }
 }
-
 
 
 

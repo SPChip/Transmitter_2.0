@@ -23,19 +23,17 @@ void Settings_CH() {
     LCD.setCursor(7, 29 + i * 10);
     LCD.print("CH");
   }
-  first_frame = 0;                      //опускаем флаг отрисовки
-  while (!KEY3.isHolded()) {            //пок ане будет удержана кнопка 3
-    //KEY1.tick();                                // постоянно проверяем первую кнопку
-   // KEY2.tick();                                // постоянно проверяем вторую кнопку
-    KEY3.tick();                                // постоянно проверяем третью кнопку
+  first_frame = 0;                       //опускаем флаг отрисовки
+  while (!KEY3.isHolded()) {             //пок не будет удержана кнопка 3    
+    KEY3.tick();                         // постоянно проверяем третью кнопку
     ReadData();                          //опрашиваем кнопки
     PackForTX();                         //пакуем пакет
 
-    if  (UP_KEY.clickBtn()) {                //если нажата кнопка вверх
+    if  (UP_KEY.clickBtn()) {            //если нажата кнопка вверх
       cur_y--;                           //двигаем курсор вверх
       if (cur_y < 0) {
         cur_y = 0;
-        first_line--;                     //если доши до нуля двигаем все значения вверх
+        first_line--;                    //если доши до нуля двигаем все значения вверх
         if (first_line < 0) first_line = 0;
       }
       first_frame = 0;
@@ -64,19 +62,19 @@ void Settings_CH() {
     }
 
     if  (WHITE_KEY.clickBtn()) {
-      current_settings[_i + first_line][_j]++;
+      data.data_set [data.set][_i + first_line][_j]++;
       if (_j == 0) {
-        if (current_settings[_i + first_line][_j] > 19)current_settings[_i + first_line][_j] = 0;
+        if (data.data_set [data.set][_i + first_line][_j] > 19)data.data_set [data.set][_i + first_line][_j] = 0;
       }
       first_frame = 0;
     }
 
     if  (BLUE_KEY.clickBtn()) {
       if (_j == 0) {
-        if (current_settings[_i + first_line][_j] == 0) {
-          current_settings[_i + first_line][_j] = 19;
-        } else current_settings[_i + first_line][_j]--;
-      } else current_settings[_i + first_line][_j]--;
+        if (data.data_set [data.set][_i + first_line][_j] == 0) {
+          data.data_set [data.set][_i + first_line][_j] = 19;
+        } else data.data_set [data.set][_i + first_line][_j]--;
+      } else data.data_set [data.set][_i + first_line][_j]--;
       first_frame = 0;
     }
     //значок батареи
@@ -116,16 +114,11 @@ void Settings_CH() {
           } else LCD.setTextColor(CYAN);
 
           LCD.setCursor(_x + 2, _y + 1);
-          if (j == 0)LCD.print (NAME_KEY[current_settings[i + first_line][j]]);
-          else LCD.print (current_settings[i + first_line][j]);
+          if (j == 0)LCD.print (NAME_KEY[data.data_set [data.set][i + first_line][j]]);
+          else LCD.print (data.data_set [data.set][i + first_line][j]);
         }
       }
 
-    }
-  }
-  for (uint8_t i = 0; i < 20; i++) {
-    for (uint8_t j = 0; j < 3; j++) {
-      data.data_set [data.set][i][j] = current_settings[i][j];
     }
   }
   EEPROM.put(0, data);
@@ -134,8 +127,7 @@ void Settings_CH() {
 
 void Settings_PWR() {
   bool flagBlink = 1;                           // флаг для мигания изменяемого параметра
-  while (!KEY3.isHolded()) {                    // пока не будет удержана кнопка 2
-    //KEY1.tick();                                // постоянно проверяем первую кнопку
+  while (!KEY3.isHolded()) {                    // пока не будет удержана кнопка 2    
     KEY2.tick();                                // постоянно проверяем вторую кнопку
     KEY3.tick();                                // постоянно проверяем третью кнопку
     ReadData();
@@ -174,13 +166,19 @@ void Settings_PWR() {
 void Settings_Preset(uint8_t disp) {                        // выбор пресета
   bool flagBlink = 1;                           // флаг для мигания изменяемого параметра
   while (!KEY2.isHolded()) {                    // пока не будет удержана кнопка 2
-    //KEY1.tick();                                // постоянно проверяем первую кнопку
     KEY2.tick();                                // постоянно проверяем вторую кнопку
     KEY3.tick();                                // постоянно проверяем третью кнопку
     ReadData();
     PackForTX();
     if (disp == 1 && LCD_TIMER.isReady()) {
       Display1();
+      if (_cur_pwr != data.pwr || first_frame == 0) {
+        _cur_pwr = data.pwr;
+        LCD.setTextColor(YELLOW);
+        LCD.fillRect(100, 15, 45, 8, BLACK);
+        LCD.setCursor(100, 15);
+        LCD.print (SET_PWR[data.pwr]);
+      }
       first_frame = 1;
     }
     if (disp == 3 && LCD_TIMER.isReady())  {
@@ -209,11 +207,6 @@ void Settings_Preset(uint8_t disp) {                        // выбор пре
       data.set++;
       if (data.set > 5) data.set = 5;
       first_frame = 0;
-    }
-    for (uint8_t i = 0; i < 20; i++) {
-      for (uint8_t j = 0; j < 3; j++) {
-        current_settings[i][j] = data.data_set [data.set][i][j];
-      }
     }
   }
   EEPROM.put(0, data);
